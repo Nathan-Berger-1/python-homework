@@ -7,13 +7,14 @@ Lancez-le avec :  uv run snake.py
 Testez-le avec :  uv run pytest
 """
 
-from random import randint
+import random
 
 import pygame as pg
 
 # Le plateau : X × Y cases de W × H pixels (étape 3).
 X, Y = 30, 30
 W, H = 20, 20
+
 
 UP, DOWN, LEFT, RIGHT = (0, -1), (0, +1), (-1, 0), (+1, 0)
 
@@ -53,31 +54,39 @@ def random_fruit(snake):
 
 # --- la boucle de jeu --------------------------------------------------------
 
+def draw_tile(screen, tile, color):
+    x, y = tile
+    rect = pg.Rect(x * W, y * H, W, H)
+    pg.draw.rect(screen, color, rect)
+
 
 def main():
     pg.init()
-    screen = pg.display.set_mode((400, 300))
+    screen = pg.display.set_mode((X * W, Y * H))
     clock = pg.time.Clock()
 
-    running=True
+    running = True
+
     while running:
-        # au plus 1 image par seconde
         clock.tick(1)
 
-        # 1. les événements : il faut les lire, sinon la fenêtre ne répond pas
         for event in pg.event.get():
-            print(event)
-            if event.type==pg.QUIT or (event.type==pg.KEYDOWN and event.key==pg.K_q) :
+            if event.type == pg.QUIT or (
+                event.type == pg.KEYDOWN and event.key == pg.K_q
+            ):
                 running = False
-        pass    
 
-        # 2. l'état (rien pour l'instant)
+        # Dessiner le damier
+        screen.fill((255, 255, 255))
 
-        # 3. l'affichage : on prépare l'image en mémoire...
-        screen.fill((randint(0, 255), randint(0, 255), randint(0, 255)))
-        # ... puis on l'envoie à l'écran, une seule fois par tour de boucle
+        for y in range(Y):
+            for x in range(X):
+                if (x + y) % 2 == 0:
+                    draw_tile(screen, (x, y), (200, 200, 200))
+
         pg.display.update()
-pg.quit()
+
+    pg.quit()
 
 # Ce bloc ne s'exécute que si l'on lance ce fichier (uv run snake.py),
 # pas quand un autre fichier fait `import snake` (les tests, par ex.).
