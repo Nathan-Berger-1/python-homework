@@ -26,25 +26,34 @@ UP, DOWN, LEFT, RIGHT = (0, -1), (0, +1), (-1, 0), (+1, 0)
 
 def in_scope(tile):
     """Vrai si la case `tile` = (x, y) est sur le plateau."""
-    raise NotImplementedError("étape 5")
+    x,y=tile
+    return 0 <= x < X and 0 <= y < Y
 
 
 def next_head(snake, direction):
     """La case où arrive la tête (le dernier élément de `snake`)."""
-    raise NotImplementedError("étape 5")
+    x,y=snake[-1]
+    dx,dy=direction
+    return(x+dx,y+dy)
 
 
 def turn(direction, key):
     """La nouvelle direction après l'appui sur la touche `key` (ex. pg.K_UP)."""
-    raise NotImplementedError("étape 6")
+    directions = {pg.K_UP: UP,pg.K_DOWN: DOWN,pg.K_LEFT: LEFT,pg.K_RIGHT: RIGHT}
+    new_direction = directions.get(key,direction)
+    if new_direction == (-direction[0],-direction[1]):
+        return direction
+    return new_direction
 
 
 def move(snake, direction, fruit):
     """Avance le serpent d'une case, en modifiant la liste `snake` sur place.
-
     Renvoie ce qui s'est passé : "ate", "moved", "self-bite" ou "out-of-board".
     """
-    raise NotImplementedError("étapes 5, 7 et 8")
+    tete = next_head(snake,direction)
+    snake.append(tete)
+    snake.pop(0)
+    return "moved"
 
 
 def random_fruit(snake):
@@ -67,22 +76,26 @@ def main():
 
     running = True
 
+    snake = [(10, 15), (11, 15), (12, 15)]
+
     while running:
-        clock.tick(1)
+        clock.tick(6)
 
         for event in pg.event.get():
-            if event.type == pg.QUIT or (
-                event.type == pg.KEYDOWN and event.key == pg.K_q
-            ):
+            if event.type == pg.QUIT or (event.type == pg.KEYDOWN and event.key == pg.K_q):
                 running = False
 
-        # Dessiner le damier
         screen.fill((255, 255, 255))
+
+        move(snake, direction, None)
 
         for y in range(Y):
             for x in range(X):
                 if (x + y) % 2 == 0:
                     draw_tile(screen, (x, y), (200, 200, 200))
+
+        for tile in snake:
+            draw_tile(screen, tile, (0, 150, 0))
 
         pg.display.update()
 
