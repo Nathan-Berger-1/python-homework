@@ -7,8 +7,8 @@ Lancez-le avec :  uv run boids.py
 Testez-le avec :  uv run pytest
 """
 
-import math  # noqa: F401 (servira à l'étape 2)
-import random  # noqa: F401 (servira à l'étape 4)
+import math
+import random
 from pathlib import Path
 
 import arcade
@@ -138,7 +138,6 @@ class MyWindow(arcade.Window):
         #boid = arcade.Sprite(ARROW, center_x=100, center_y=100)
         # une SpriteList : une liste de sprites, qu'arcade dessine d'un coup
         
-        global EVERYTHING
         EVERYTHING.clear()
         self.obstacles = arcade.SpriteList()
         self.obstacles.extend(obstacle_grid(GRID))
