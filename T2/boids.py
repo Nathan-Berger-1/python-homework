@@ -29,6 +29,7 @@ N_BOIDS = 20  # (étape 4)
 GRID = 10  # GRID × GRID obstacles (étape 6)
 RADIUS = 30  # rayon de détection des voisins, en pixels (étapes 7 et 8)
 
+EVERYTHING = []
 
 # --- les objets du jeu -------------------------------------------------------
 # Ces classes et fonctions sont vérifiées par les tests (tests/test_boids.py) :
@@ -47,25 +48,36 @@ class Boid(arcade.Sprite):
         super().__init__(ARROW, center_x=x, center_y=y, angle=angle)
         self.speed=speed
         self.turning=0
+        self.others = others if others is not None else []
 
     def update(self, delta_time=1 / 60, *args, **kwargs):
         """Appelée par arcade (via la SpriteList) à chaque mise à jour."""
+        if self.neighbours(EVERYTHING):
+            self.alpha = 127
+        else:
+            self.alpha = 255
         self.angle += self.turning * TURN_SPEED * delta_time
         self.angle += random.uniform(-NOISE,NOISE)
         rad = math.radians(self.angle)
         self.center_x += self.speed * delta_time * math.cos(rad)
         self.center_y += self.speed * delta_time * math.sin(rad)
-        self.center_x %= WIDTH
-        self.center_y %= HEIGHT
+        dx, dy = self.separation(EVERYTHING)
+        self.center_x = (self.center_x + dx)%WIDTH
+        self.center_y = (self.center_y + dy)%HEIGHT
 
     def neighbours(self, others, radius=RADIUS):
         """Les objets de `others` à moins de `radius` pixels, sauf soi-même."""
-        raise NotImplementedError("étape 7")
+        return [other for other in others if other is not self and math.dist(self.position, other.position) < radius]
 
     def separation(self, others, radius=RADIUS):
         """Le déplacement (dx, dy) qui écarte le boid de ses voisins."""
-        raise NotImplementedError("étape 8")
-
+        dx,dy=0,0
+        for other in self.neighbours(others, radius):
+            d = math.dist(self.position, other.position)
+            delta = 0.5 * (1 - d / radius)
+            dx += (self.center_x - other.center_x) * delta
+            dy += (self.center_y - other.center_y) * delta
+        return dx,dy
 
 class Obstacle(arcade.Sprite):
     """Un obstacle immobile."""
@@ -112,13 +124,20 @@ class MyWindow(arcade.Window):
         # pour l'instant, un simple Sprite : une image posée en (100, 100),
         # comptés depuis le coin en bas à gauche
         #boid = arcade.Sprite(ARROW, center_x=100, center_y=100)
-        boid=Boid(100, 100, 90)
         # une SpriteList : une liste de sprites, qu'arcade dessine d'un coup
+        
+        global EVERYTHING
+        EVERYTHING.clear()
         self.obstacles = arcade.SpriteList()
-        self.obstacles.extend(obstacle_grid(GRID))       
+        self.obstacles.extend(obstacle_grid(GRID))
+         
         self.boids = arcade.SpriteList()
-        self.boids.append(boid)
-        self.boids.extend(random_boids(N_BOIDS,others=self.boids))
+        self.boids.extend(random_boids(N_BOIDS))
+
+        EVERYTHING.extend(self.obstacles)
+        EVERYTHING.extend(self.boids)
+
+
 
     def on_key_press(self, symbol, modifiers):
         if symbol == arcade.key.LEFT:
