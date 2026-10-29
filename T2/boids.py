@@ -20,7 +20,7 @@ BACKGROUND = arcade.color.ALMOND
 HERE = Path(__file__).parent
 ARROW = HERE / "media" / "arrow.png"
 OBSTACLE = HERE / "media" / "obstacle.png"
-SKY = HERE / "media" / "sky.png"  # le décor (étape 9)
+SKY = HERE / "media" / "ciel_rose.jpg"  # le décor (étape 9)
 
 SPEED = 100  # pixels par seconde (étape 2)
 TURN_SPEED = 180  # degrés par seconde, tant qu'une flèche est enfoncée (étape 5)
@@ -52,25 +52,32 @@ class Boid(arcade.Sprite):
 
     def update(self, delta_time=1 / 60, *args, **kwargs):
         """Appelée par arcade (via la SpriteList) à chaque mise à jour."""
-        if self.neighbours(EVERYTHING):
+        if self.neighbours(self.others):
             self.alpha = 127
         else:
             self.alpha = 255
         self.angle += self.turning * TURN_SPEED * delta_time
         self.angle += random.uniform(-NOISE,NOISE)
         rad = math.radians(self.angle)
-        self.center_x += self.speed * delta_time * math.cos(rad)
-        self.center_y += self.speed * delta_time * math.sin(rad)
-        dx, dy = self.separation(EVERYTHING)
-        self.center_x = (self.center_x + dx)%WIDTH
-        self.center_y = (self.center_y + dy)%HEIGHT
+        sep_x,sep_y=self.separation(self.others)
+        self.center_x += self.speed * delta_time * math.cos(rad) + sep_x
+        self.center_y += -self.speed * delta_time * math.sin(rad) + sep_y
+        
+        self.center_x = (self.center_x)%WIDTH
+        self.center_y = (self.center_y)%HEIGHT
+
+
 
     def neighbours(self, others, radius=RADIUS):
         """Les objets de `others` à moins de `radius` pixels, sauf soi-même."""
+        if others is None:
+            others = self.others
         return [other for other in others if other is not self and math.dist(self.position, other.position) < radius]
 
     def separation(self, others, radius=RADIUS):
         """Le déplacement (dx, dy) qui écarte le boid de ses voisins."""
+        if others is None:
+            others = self.others
         dx,dy=0,0
         for other in self.neighbours(others, radius):
             d = math.dist(self.position, other.position)
@@ -120,6 +127,11 @@ class MyWindow(arcade.Window):
         # pixels, avec « Boids » pour titre (super() : on y revient en séance)
         super().__init__(WIDTH, HEIGHT, "Boids")
         self.background_color = BACKGROUND  # la couleur que self.clear() étale
+        self.sky = arcade.SpriteList()
+        sky = arcade.Sprite(SKY, center_x=WIDTH / 2,center_y=HEIGHT / 2)
+        sky.width = WIDTH
+        sky.height = HEIGHT
+        self.sky.append(sky)
 
         # pour l'instant, un simple Sprite : une image posée en (100, 100),
         # comptés depuis le coin en bas à gauche
@@ -132,7 +144,7 @@ class MyWindow(arcade.Window):
         self.obstacles.extend(obstacle_grid(GRID))
          
         self.boids = arcade.SpriteList()
-        self.boids.extend(random_boids(N_BOIDS))
+        self.boids.extend(random_boids(N_BOIDS,others=EVERYTHING))
 
         EVERYTHING.extend(self.obstacles)
         EVERYTHING.extend(self.boids)
@@ -159,6 +171,7 @@ class MyWindow(arcade.Window):
 
     def on_draw(self):
         self.clear()
+        self.sky.draw()
         self.obstacles.draw()
         self.boids.draw()
 
