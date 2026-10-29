@@ -52,7 +52,8 @@ class Boid(arcade.Sprite):
         rad = math.radians(self.angle)
         self.center_x += self.speed * delta_time * math.cos(rad)
         self.center_y += self.speed * delta_time * math.sin(rad)
-
+        self.center_x %= 800
+        self.center_y %= 800
 
     def neighbours(self, others, radius=RADIUS):
         """Les objets de `others` à moins de `radius` pixels, sauf soi-même."""
