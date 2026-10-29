@@ -46,14 +46,17 @@ class Boid(arcade.Sprite):
     def __init__(self, x, y, angle, speed=SPEED, others=None):
         super().__init__(ARROW, center_x=x, center_y=y, angle=angle)
         self.speed=speed
+        self.turning=0
 
     def update(self, delta_time=1 / 60, *args, **kwargs):
         """Appelée par arcade (via la SpriteList) à chaque mise à jour."""
+        self.angle += self.turning * TURN_SPEED * delta_time
+        self.angle += random.uniform(-NOISE,NOISE)
         rad = math.radians(self.angle)
         self.center_x += self.speed * delta_time * math.cos(rad)
         self.center_y += self.speed * delta_time * math.sin(rad)
-        self.center_x %= 800
-        self.center_y %= 800
+        self.center_x %= WIDTH
+        self.center_y %= HEIGHT
 
     def neighbours(self, others, radius=RADIUS):
         """Les objets de `others` à moins de `radius` pixels, sauf soi-même."""
@@ -68,7 +71,7 @@ class Obstacle(arcade.Sprite):
     """Un obstacle immobile."""
 
     def __init__(self, x, y):
-        raise NotImplementedError("étape 6")
+        super().__init__(OBSTACLE, center_x=x, center_y=y)
 
 
 def random_boids(n, others=None):
@@ -85,7 +88,15 @@ def random_boids(n, others=None):
 
 def obstacle_grid(n):
     """n × n obstacles régulièrement espacés, au centre de leur carré."""
-    raise NotImplementedError("étape 6")
+    obstacles = []
+    pas_x = WIDTH / n
+    pas_y = HEIGHT / n
+    for i in range(n):
+        for j in range(n):
+            x = (i + 0.5) * pas_x
+            y = (j + 0.5) * pas_y
+            obstacles.append(Obstacle(x, y))
+    return obstacles
 
 
 # --- la fenêtre ---------------------------------------------------------------
@@ -103,15 +114,33 @@ class MyWindow(arcade.Window):
         #boid = arcade.Sprite(ARROW, center_x=100, center_y=100)
         boid=Boid(100, 100, 90)
         # une SpriteList : une liste de sprites, qu'arcade dessine d'un coup
+        self.obstacles = arcade.SpriteList()
+        self.obstacles.extend(obstacle_grid(GRID))       
         self.boids = arcade.SpriteList()
         self.boids.append(boid)
         self.boids.extend(random_boids(N_BOIDS,others=self.boids))
+
+    def on_key_press(self, symbol, modifiers):
+        if symbol == arcade.key.LEFT:
+            for boid in self.boids:
+                boid.turning = -1
+        elif symbol == arcade.key.RIGHT:
+            for boid in self.boids:
+                boid.turning = 1
+        elif symbol == arcade.key.Q:
+            self.close()
+
+    def on_key_release(self, symbol, modifiers):
+        if symbol == arcade.key.LEFT or symbol == arcade.key.RIGHT:
+            for boid in self.boids:
+                boid.turning = 0
 
     def on_update(self, delta_time):
         self.boids.update(delta_time)
 
     def on_draw(self):
         self.clear()
+        self.obstacles.draw()
         self.boids.draw()
 
 
