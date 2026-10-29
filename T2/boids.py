@@ -44,11 +44,15 @@ class Boid(arcade.Sprite):
     """Un oiseau : une flèche qui avance dans la direction où elle pointe."""
 
     def __init__(self, x, y, angle, speed=SPEED, others=None):
-        raise NotImplementedError("étape 2 (et 7 pour others)")
+        super().__init__(ARROW, center_x=x, center_y=y, angle=angle)
+        self.speed=speed
 
     def update(self, delta_time=1 / 60, *args, **kwargs):
         """Appelée par arcade (via la SpriteList) à chaque mise à jour."""
-        raise NotImplementedError("étapes 2, 3, 5, 7 et 8")
+        rad = math.radians(self.angle)
+        self.center_x += self.speed * delta_time * math.cos(rad)
+        self.center_y += self.speed * delta_time * math.sin(rad)
+
 
     def neighbours(self, others, radius=RADIUS):
         """Les objets de `others` à moins de `radius` pixels, sauf soi-même."""
@@ -88,24 +92,23 @@ class MyWindow(arcade.Window):
 
         # pour l'instant, un simple Sprite : une image posée en (100, 100),
         # comptés depuis le coin en bas à gauche
-        boid = arcade.Sprite(ARROW, center_x=100, center_y=100)
+        #boid = arcade.Sprite(ARROW, center_x=100, center_y=100)
+        boid=Boid(100, 100, 90)
         # une SpriteList : une liste de sprites, qu'arcade dessine d'un coup
         self.boids = arcade.SpriteList()
         self.boids.append(boid)
 
     def on_update(self, delta_time):
-        print('on_update',delta_time)
+        self.boids.update(delta_time)
 
     def on_draw(self):
         self.clear()
         self.boids.draw()
-        print('on_draw')
 
 
 def main():
     MyWindow()
     arcade.run()
-
 
 # Ce bloc ne s'exécute que si l'on lance ce fichier (uv run boids.py),
 # pas quand un autre fichier fait `import boids` (les tests, par ex.).
