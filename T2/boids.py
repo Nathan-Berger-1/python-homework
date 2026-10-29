@@ -73,7 +73,14 @@ class Obstacle(arcade.Sprite):
 
 def random_boids(n, others=None):
     """n boids placés et orientés au hasard, qui évitent tous `others`."""
-    raise NotImplementedError("étape 4")
+    boids=[]
+    for i in range (n) :
+        x = random.uniform(0, 800)
+        y = random.uniform(0, 800)
+        angle = random.uniform(0, 360)
+        boids.append(Boid(x, y, angle, others=others))
+    return boids
+        
 
 
 def obstacle_grid(n):
@@ -98,6 +105,7 @@ class MyWindow(arcade.Window):
         # une SpriteList : une liste de sprites, qu'arcade dessine d'un coup
         self.boids = arcade.SpriteList()
         self.boids.append(boid)
+        self.boids.extend(random_boids(N_BOIDS,others=self.boids))
 
     def on_update(self, delta_time):
         self.boids.update(delta_time)
